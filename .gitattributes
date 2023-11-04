@@ -1,0 +1,9 @@
+############################################################
+# Normalize line endings for text files:
+# - on check out, use current OS style line endings
+# - on check in, use Unix style line endings
+############################################################
+*			text=auto
+*.vcproj	text	eol=auto
+*.cs 		text	eol=auto
+*.sh 		text	eol=lf

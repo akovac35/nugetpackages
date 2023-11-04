@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NugetPackages.DownloadList": {
+      "commandName": "Project",
+      "commandLineArgs": "--file $(SolutionDir)/src/$(SolutionName).PrepareList/bin/$(Configuration)/net6.0/package_list.tsv"
+    }
+  }
+}

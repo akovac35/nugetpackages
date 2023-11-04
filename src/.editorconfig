@@ -173,7 +173,7 @@ dotnet_diagnostic.CA1309.severity = warning
 dotnet_diagnostic.CA1310.severity = none
 
 # CA1311: Specify a culture or use an invariant version
-dotnet_diagnostic.CA1311.severity = warning
+dotnet_diagnostic.CA1311.severity = none
 
 # CA1401: P/Invokes should not be visible
 dotnet_diagnostic.CA1401.severity = warning

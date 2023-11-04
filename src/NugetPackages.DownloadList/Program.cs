@@ -1,12 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.CommandLine;
+using System.IO.Compression;
 using NugetPackages.Infrastructure;
 using NugetPackages.Model;
 using Spectre.Console;
 using Color = Spectre.Console.Color;
 
 var fileOption = new Option<FileInfo>(
-                "--file",
+                new[] { "--file", "-f" },
                 "Path to the file containing a list of NuGet packages to download."
             )
 {
@@ -14,9 +15,16 @@ var fileOption = new Option<FileInfo>(
 };
 
 var destinationOption = new Option<DirectoryInfo>(
-                "--destination",
+                new[] { "--destination", "-d" },
                 "Path where NuGet packages will be stored."
             )
+{
+    IsRequired = false
+};
+
+var unpackPackages = new Option<bool>(
+            new[] { "--unpack", "-u" },
+            "Unpacks downloaded NuGet packages.")
 {
     IsRequired = false
 };
@@ -24,13 +32,15 @@ var destinationOption = new Option<DirectoryInfo>(
 var rootCommand = new RootCommand("Downloads NuGet packages.")
             {
     fileOption,
-    destinationOption
+    destinationOption,
+    unpackPackages
 };
 
 rootCommand.SetHandler(async (context) =>
 {
     var fileInfo = context.ParseResult.GetValueForOption(fileOption);
     var destination = context.ParseResult.GetValueForOption(destinationOption)?.FullName??Environment.CurrentDirectory;
+    var unpack = context.ParseResult.GetValueForOption(unpackPackages);
 
     if(!Directory.Exists(destination))
     {
@@ -84,6 +94,15 @@ rootCommand.SetHandler(async (context) =>
                 if (item.Exception != null)
                 {
                     AnsiConsole.MarkupLine($"[red]Error downloading {item.PackageId}: {item.Exception.Message}[/]");
+                }
+                else if(unpack && item.FullPath != null)
+                {
+                    var newDir = Path.Combine(destination, item.PackageId.ToLowerInvariant().Replace(".nuget", ""));
+                    if(!Directory.Exists(newDir))
+                    {
+                        Directory.CreateDirectory(newDir);
+                        ZipFile.ExtractToDirectory(item.FullPath, newDir);
+                    }
                 }
             }
 

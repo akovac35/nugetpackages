@@ -7,24 +7,32 @@ using Spectre.Console;
 using Color = Spectre.Console.Color;
 
 var fileOption = new Option<FileInfo>(
-                new[] { "--file", "-f" },
+                new[] { "-f" },
                 "Path to the file containing a list of NuGet packages to download."
             )
 {
     IsRequired = true
 };
 
-var destinationOption = new Option<DirectoryInfo>(
-                new[] { "--destination", "-d" },
-                "Path where NuGet packages will be stored."
+var directoryOption = new Option<DirectoryInfo>(
+                new[] { "-d" },
+                "Directory where NuGet packages will be stored. Defaults to: <current directory>"
             )
 {
     IsRequired = false
 };
+directoryOption.SetDefaultValue(new DirectoryInfo(Environment.CurrentDirectory));
 
-var unpackPackages = new Option<bool>(
-            new[] { "--unpack", "-u" },
-            "Unpacks downloaded NuGet packages.")
+var unpackPackagesOption = new Option<bool>(
+            new[] { "-u" },
+            "Whether to unpack downloaded NuGet packages. Defaults to: false")
+{
+    IsRequired = false
+};
+
+var forceOption = new Option<bool>(
+            new[] { "--force" },
+            "Whether to process the package even if it is found in the directory. Defaults to: false")
 {
     IsRequired = false
 };
@@ -32,24 +40,28 @@ var unpackPackages = new Option<bool>(
 var rootCommand = new RootCommand("Downloads NuGet packages.")
             {
     fileOption,
-    destinationOption,
-    unpackPackages
+    directoryOption,
+    unpackPackagesOption,
+    forceOption
 };
 
 rootCommand.SetHandler(async (context) =>
 {
-    var fileInfo = context.ParseResult.GetValueForOption(fileOption);
-    var destination = context.ParseResult.GetValueForOption(destinationOption)?.FullName??Environment.CurrentDirectory;
-    var unpack = context.ParseResult.GetValueForOption(unpackPackages);
-
-    if(!Directory.Exists(destination))
-    {
-        Directory.CreateDirectory(destination);
-    }
+    var file = context.ParseResult.GetValueForOption(fileOption)!;
+    var directory = context.ParseResult.GetValueForOption(directoryOption)!;
+    var unpack = context.ParseResult.GetValueForOption(unpackPackagesOption);
+    var force = context.ParseResult.GetValueForOption(forceOption);
 
     AnsiConsole.MarkupLine($"[orange1]Downloading NuGet packages[/]");
-    AnsiConsole.MarkupLine($"Package list: [orange1]{fileInfo!.FullName}[/]");
-    AnsiConsole.MarkupLine($"Destination: [orange1]{destination}[/]");
+    AnsiConsole.MarkupLine($"-f: [blue]{file.FullName}[/]");
+    AnsiConsole.MarkupLine($"-d: [blue]{directory.FullName}[/]");
+    AnsiConsole.MarkupLine($"-u: [blue]{unpack}[/]");
+    AnsiConsole.MarkupLine($"--force: [blue]{force}[/]");
+
+    if (!directory.Exists)
+    {
+        Directory.CreateDirectory(directory.FullName);
+    }
 
     ProgressBarColumn progressBarColumn = new()
     {
@@ -80,13 +92,26 @@ rootCommand.SetHandler(async (context) =>
         .StartAsync(async context =>
         {
             var downloadTask = context.AddTask("Downloading");
-            var fileContents = await File.ReadAllLinesAsync(fileInfo.FullName);
+            var fileContents = await File.ReadAllLinesAsync(file.FullName);
             var packages = fileContents.Skip(1).Select(item => item.Split('\t'))
                 .Select(item => new Package() { Id = item[0], Version = item[1], License = item[2] })
                 .ToList();
+
+            var filtererdPackages = packages;
+
+            if(!force)
+            {
+                var dirFiles = directory.GetFiles("*.nupkg", SearchOption.TopDirectoryOnly)
+                .Select(item => item.Name)
+                .ToList();
+
+                filtererdPackages = packages.Where(item => !dirFiles.Any(x => x.ToLowerInvariant() == $"{item.IdWithVersion}.nupkg".ToLowerInvariant()))
+                .ToList();
+            }
+
             downloadTask.MaxValue = packages.Count;
 
-            await foreach (var item in PackageHelper.DownloadPackages(packages, destination))
+            await foreach (var item in PackageHelper.DownloadPackages(filtererdPackages, directory.FullName))
             {
                 downloadTask.IsIndeterminate = item.Index == null;
                 downloadTask.Value = (item.Index + 1) ?? 0;
@@ -95,15 +120,25 @@ rootCommand.SetHandler(async (context) =>
                 {
                     AnsiConsole.MarkupLine($"[red]Error downloading {item.PackageId}: {item.Exception.Message}[/]");
                 }
-                else if(unpack && item.FullPath != null)
+            }
+
+            if (unpack)
+            {
+                foreach (var item in packages)
                 {
-                    var newDir = Path.Combine(destination, item.PackageId.ToLowerInvariant().Replace(".nuget", ""));
-                    if(!Directory.Exists(newDir))
+                    try
                     {
-                        Directory.CreateDirectory(newDir);
-                        ZipFile.ExtractToDirectory(item.FullPath, newDir);
+                        var newDir = Path.Combine(directory.FullName, item.IdWithVersion);
+                        if (!Directory.Exists(newDir) || force)
+                        {
+                            ZipFile.ExtractToDirectory(Path.Combine(directory.FullName, $"{item.IdWithVersion}.nupkg"), newDir, overwriteFiles: true);
+                        }
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error unpacking {item.Id}: {ex.Message}[/]");
+                    }
+                } 
             }
 
             AnsiConsole.MarkupLine($"Downloaded [orange1]{packages.Count}[/] packages");

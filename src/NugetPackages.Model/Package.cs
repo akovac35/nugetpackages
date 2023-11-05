@@ -8,6 +8,14 @@
 
         public string? License { get; init; } = null!;
 
+        public string IdWithVersion
+        {
+            get 
+            {
+                return $"{Id}.{Version}";
+            }
+        }
+
         public IList<string> Dependencies { get; init; } = new List<string>();
     }
 }

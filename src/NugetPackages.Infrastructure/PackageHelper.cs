@@ -117,11 +117,13 @@ namespace NugetPackages.Infrastructure
                 && packages.Any(item => item.Version.Major == 6)
                 && new string[]{"dotnet", "microsoft", "system", "runtime" }.Any(item => packageId.ToLowerInvariant().StartsWith(item)))
             {
-                // take one latest version of each LTS version
+                // take one of each latest .net version
                 return new List<PackageSearchMetadataRegistration>
                 {
                     packages.FirstOrDefault(item => item.Version.Major == 8 && !item.Version.IsPrerelease)
                     ?? packages.First(item => item.Version.Major == 8),
+                    packages.FirstOrDefault(item => item.Version.Major == 7 && !item.Version.IsPrerelease)
+                    ?? packages.First(item => item.Version.Major == 7),
                     packages.FirstOrDefault(item => item.Version.Major == 6 && !item.Version.IsPrerelease)
                     ?? packages.First(item => item.Version.Major == 6)
                 };                    
@@ -295,13 +297,14 @@ namespace NugetPackages.Infrastructure
             for (var i = 0; i < packages.Count; i++)
             {
                 var packageId = packages[i].Id;
+                var packageIdWithVersion = packages[i].IdWithVersion;
                 var packageVersion = new NuGetVersion(packages[i].Version);
 
                 taskFunctionQueue.Enqueue(() => WithRetry(async () =>
                 {
                     try
                     {
-                        string filePath = Path.Combine(destinationPath, $"{packageId}.{packageVersion}.nupkg");
+                        string filePath = Path.Combine(destinationPath, $"{packageIdWithVersion}.nupkg");
                         using FileStream packageStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
 
                         await resource.CopyNupkgToStreamAsync(

@@ -73,15 +73,29 @@ List<string> searchTerms = new() {
   "packageid:Jint",
 };
 
-var rootCommand = new RootCommand("Prepares a list of NuGet packages and stores them in a file in the current directory.");
+var fileOption = new Option<FileInfo>(
+                new[] { "-f" },
+                "Result file path. Defaults to: <current directory>/package_list.tsv"
+            )
+{
+    IsRequired = false
+};
+fileOption.SetDefaultValue(new FileInfo(Path.Combine(Environment.CurrentDirectory,"package_list.tsv")));
+
+var rootCommand = new RootCommand("Prepares a list of NuGet packages.")
+{
+    fileOption
+};
 
 rootCommand.SetHandler(async (context) =>
 {
+    var file = context.ParseResult.GetValueForOption(fileOption)!;
 
     List<ClonedPackageSearchMetadata> packageList = new();
     List<Package> packages = new();
 
     AnsiConsole.MarkupLine("[orange1]Preparing NuGet package list[/]");
+    AnsiConsole.MarkupLine($"-f: [blue]{file.FullName}[/]");
 
     ProgressBarColumn progressBarColumn = new()
     {
@@ -181,13 +195,17 @@ rootCommand.SetHandler(async (context) =>
     await AnsiConsole.Status()
         .StartAsync("Storing results ...", async ctx =>
         {
-            var filePath = Path.Combine(Environment.CurrentDirectory, "package_list.tsv");
+            if(!(file.Directory?.Exists ?? true))
+            {
+                Directory.CreateDirectory(file.Directory.FullName);
+            }
+
             packages = packages.OrderBy(item => item.Id).ToList();
 
-            await File.WriteAllTextAsync(path: filePath, contents: PackageHelper.ProcessPackagesAsString(packages).ToString());
+            await File.WriteAllTextAsync(path: file.FullName, contents: PackageHelper.ProcessPackagesAsString(packages).ToString());
 
             AnsiConsole.MarkupLine($"[orange1]Stored a list with {packages.Count} entries to:[/]");
-            AnsiConsole.Write(new TextPath(filePath).LeafColor(Color.Orange1));
+            AnsiConsole.Write(new TextPath(file.FullName).LeafColor(Color.Orange1));
             AnsiConsole.MarkupLine("[green]Done[/]");
         });
 });

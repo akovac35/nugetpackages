@@ -75,12 +75,12 @@ List<string> searchTerms = new() {
 
 var fileOption = new Option<FileInfo>(
                 new[] { "-f" },
-                "Result file path. Defaults to: <current directory>/package_list.tsv"
+                "Result file path."
             )
 {
     IsRequired = false
 };
-fileOption.SetDefaultValue(new FileInfo(Path.Combine(Environment.CurrentDirectory,"package_list.tsv")));
+fileOption.SetDefaultValue(new FileInfo(Path.Combine(Environment.CurrentDirectory, "package_list.tsv")));
 
 var rootCommand = new RootCommand("Prepares a list of NuGet packages.")
 {
@@ -127,6 +127,8 @@ rootCommand.SetHandler(async (context) =>
         {
             var packageListTask = context.AddTask("Fetching list");
             packageListTask.MaxValue = searchTerms.Count;
+            packageListTask.IsIndeterminate = true;
+
             for (var i = 0; i <= packageListTask.MaxValue; i++)
             {
                 packageListTask.IsIndeterminate = i == 0;
@@ -149,6 +151,7 @@ rootCommand.SetHandler(async (context) =>
 
             var packageMetadataTask = context.AddTask("Fetching metadata");
             packageMetadataTask.MaxValue = packageList.Count;
+            packageMetadataTask.IsIndeterminate = true;
 
             await foreach (var item in PackageHelper.ProcessSearchPackagesResult(packageList))
             {
@@ -195,9 +198,9 @@ rootCommand.SetHandler(async (context) =>
     await AnsiConsole.Status()
         .StartAsync("Storing results ...", async ctx =>
         {
-            if(!(file.Directory?.Exists ?? true))
+            if (!(file.Directory?.Exists ?? true))
             {
-                Directory.CreateDirectory(file.Directory.FullName);
+                _ = Directory.CreateDirectory(file.Directory.FullName);
             }
 
             packages = packages.OrderBy(item => item.Id).ToList();

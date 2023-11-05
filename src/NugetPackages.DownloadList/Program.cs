@@ -16,7 +16,7 @@ var fileOption = new Option<FileInfo>(
 
 var directoryOption = new Option<DirectoryInfo>(
                 new[] { "-d" },
-                "Directory where NuGet packages will be stored. Defaults to: <current directory>"
+                "Directory where NuGet packages will be stored."
             )
 {
     IsRequired = false
@@ -25,14 +25,14 @@ directoryOption.SetDefaultValue(new DirectoryInfo(Environment.CurrentDirectory))
 
 var unpackPackagesOption = new Option<bool>(
             new[] { "-u" },
-            "Whether to unpack downloaded NuGet packages. Defaults to: false")
+            "Whether to unpack downloaded NuGet packages.")
 {
     IsRequired = false
 };
 
 var forceOption = new Option<bool>(
             new[] { "--force" },
-            "Whether to process the package even if it is found in the directory. Defaults to: false")
+            "Whether to process the package even if it is found in the directory.")
 {
     IsRequired = false
 };
@@ -60,7 +60,7 @@ rootCommand.SetHandler(async (context) =>
 
     if (!directory.Exists)
     {
-        Directory.CreateDirectory(directory.FullName);
+        _ = Directory.CreateDirectory(directory.FullName);
     }
 
     ProgressBarColumn progressBarColumn = new()
@@ -91,15 +91,14 @@ rootCommand.SetHandler(async (context) =>
         .HideCompleted(true)
         .StartAsync(async context =>
         {
-            var downloadTask = context.AddTask("Downloading");
             var fileContents = await File.ReadAllLinesAsync(file.FullName);
+            // first line is header
             var packages = fileContents.Skip(1).Select(item => item.Split('\t'))
                 .Select(item => new Package() { Id = item[0], Version = item[1], License = item[2] })
                 .ToList();
-
             var filtererdPackages = packages;
 
-            if(!force)
+            if (!force)
             {
                 var dirFiles = directory.GetFiles("*.nupkg", SearchOption.TopDirectoryOnly)
                 .Select(item => item.Name)
@@ -109,21 +108,30 @@ rootCommand.SetHandler(async (context) =>
                 .ToList();
             }
 
-            downloadTask.MaxValue = packages.Count;
-
-            await foreach (var item in PackageHelper.DownloadPackages(filtererdPackages, directory.FullName))
+            if (filtererdPackages.Count > 0)
             {
-                downloadTask.IsIndeterminate = item.Index == null;
-                downloadTask.Value = (item.Index + 1) ?? 0;
+                var downloadTask = context.AddTask("Downloading");
+                downloadTask.MaxValue = filtererdPackages.Count;
+                downloadTask.IsIndeterminate = true;
 
-                if (item.Exception != null)
+                await foreach (var item in PackageHelper.DownloadPackages(filtererdPackages, directory.FullName))
                 {
-                    AnsiConsole.MarkupLine($"[red]Error downloading {item.PackageId}: {item.Exception.Message}[/]");
+                    downloadTask.IsIndeterminate = item.Index == null;
+                    downloadTask.Value = (item.Index + 1) ?? 0;
+
+                    if (item.Exception != null)
+                    {
+                        AnsiConsole.MarkupLine($"[red]Error downloading {item.PackageId}: {item.Exception.Message}[/]");
+                    }
                 }
             }
 
-            if (unpack)
+            if (unpack && packages.Count > 0)
             {
+                var unpackTask = context.AddTask("Unpacking");
+                unpackTask.MaxValue = packages.Count;
+                unpackTask.IsIndeterminate = true;
+
                 foreach (var item in packages)
                 {
                     try
@@ -138,10 +146,13 @@ rootCommand.SetHandler(async (context) =>
                     {
                         AnsiConsole.MarkupLine($"[red]Error unpacking {item.Id}: {ex.Message}[/]");
                     }
-                } 
+
+                    unpackTask.IsIndeterminate = false;
+                    unpackTask.Value++;
+                }
             }
 
-            AnsiConsole.MarkupLine($"Downloaded [orange1]{packages.Count}[/] packages");
+            AnsiConsole.MarkupLine($"Processed [orange1]{packages.Count}[/] packages");
         });
 });
 

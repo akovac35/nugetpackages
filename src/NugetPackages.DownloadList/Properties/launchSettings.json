@@ -2,7 +2,7 @@
   "profiles": {
     "NugetPackages.DownloadList": {
       "commandName": "Project",
-      "commandLineArgs": "-f $(SolutionDir)/src/$(SolutionName).PrepareList/bin/$(Configuration)/net6.0/package_list.tsv -u true -d c:/temp/nugets"
+      "commandLineArgs": "-f $(SolutionDir)/src/$(SolutionName).PrepareList/bin/$(Configuration)/net6.0/package_list.tsv -u false -d c:/temp/nugets"
     }
   }
 }

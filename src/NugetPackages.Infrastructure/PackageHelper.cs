@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using NuGet.Common;
@@ -115,7 +114,7 @@ namespace NugetPackages.Infrastructure
             if (packages.Any(item => item.Version.Major == 8)
                 && packages.Any(item => item.Version.Major == 7)
                 && packages.Any(item => item.Version.Major == 6)
-                && new string[]{"dotnet", "microsoft", "system", "runtime" }.Any(item => packageId.ToLowerInvariant().StartsWith(item)))
+                && new string[] { "dotnet", "microsoft", "system", "runtime" }.Any(item => packageId.ToLowerInvariant().StartsWith(item)))
             {
                 // take one of each latest .net version
                 return new List<PackageSearchMetadataRegistration>
@@ -126,7 +125,7 @@ namespace NugetPackages.Infrastructure
                     ?? packages.First(item => item.Version.Major == 7),
                     packages.FirstOrDefault(item => item.Version.Major == 6 && !item.Version.IsPrerelease)
                     ?? packages.First(item => item.Version.Major == 6)
-                };                    
+                };
             }
 
             var releases = packages.Where(item => !item.Version.ToString().Contains('-'));
@@ -276,8 +275,8 @@ namespace NugetPackages.Infrastructure
                 Count = packages.Count
             };
 
-            SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-            FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+            var repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+            var resource = await repository.GetResourceAsync<FindPackageByIdResource>();
 
             using SemaphoreSlim rateLimiter = new(TasksPerSecond);
             using SemaphoreSlim concurrentLimiter = new(ConcurrentTasksLimit);
@@ -304,10 +303,10 @@ namespace NugetPackages.Infrastructure
                 {
                     try
                     {
-                        string filePath = Path.Combine(destinationPath, $"{packageIdWithVersion}.nupkg");
-                        using FileStream packageStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                        var filePath = Path.Combine(destinationPath, $"{packageIdWithVersion}.nupkg");
+                        using var packageStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-                        await resource.CopyNupkgToStreamAsync(
+                        _ = await resource.CopyNupkgToStreamAsync(
                             packageId,
                             packageVersion,
                             packageStream,

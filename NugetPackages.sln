@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetPackages.PrepareList",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetPackages.Model", "src\NugetPackages.Model\NugetPackages.Model.csproj", "{8F8F2940-E56F-4057-834B-02509A9924CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetPackages.DownloadList", "src\NugetPackages.DownloadList\NugetPackages.DownloadList.csproj", "{D3FD8FE0-7F28-469A-AB14-D992C27974D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NugetPackages.DownloadList", "src\NugetPackages.DownloadList\NugetPackages.DownloadList.csproj", "{D3FD8FE0-7F28-469A-AB14-D992C27974D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NugetPackages.ScanFiles", "src\NugetPackages.ScanFiles\NugetPackages.ScanFiles.csproj", "{8005936E-20E9-41F2-9D4D-71D0EDE32E8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{D3FD8FE0-7F28-469A-AB14-D992C27974D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3FD8FE0-7F28-469A-AB14-D992C27974D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3FD8FE0-7F28-469A-AB14-D992C27974D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8005936E-20E9-41F2-9D4D-71D0EDE32E8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8005936E-20E9-41F2-9D4D-71D0EDE32E8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8005936E-20E9-41F2-9D4D-71D0EDE32E8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8005936E-20E9-41F2-9D4D-71D0EDE32E8D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

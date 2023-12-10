@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using NuGet.Common;
@@ -128,7 +129,7 @@ namespace NugetPackages.Infrastructure
                 };
             }
 
-            var releases = packages.Where(item => !item.Version.ToString().Contains('-'));
+            var releases = packages.Where(item => !item.Version.ToString().Contains('-')).ToList();
 
             var versionsToTake = 1;
 
@@ -263,7 +264,7 @@ namespace NugetPackages.Infrastructure
         {
             foreach (var result in packages)
             {
-                _ = stringBuilder.AppendLine($"{result.Id}\t{result.Version}\t{result.License}");
+                _ = stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"{result.Id}\t{result.Version}\t{result.License}");
             }
         }
 

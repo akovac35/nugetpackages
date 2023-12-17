@@ -862,7 +862,3 @@ dotnet_diagnostic.CS1591.severity = none
 # Rename model bound parameter
 dotnet_diagnostic.MVC1004.severity = warning
 
-[{*WebApp/**.cs}]
-# Blazor apps should execute gui tasks on the same thread, so we supress the rule to avoid problems
-# CA2007: Consider calling ConfigureAwait on the awaited task
-dotnet_diagnostic.CA2007.severity = none

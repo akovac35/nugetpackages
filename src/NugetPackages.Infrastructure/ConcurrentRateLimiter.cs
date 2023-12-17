@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace NugetPackages.Infrastructure
+﻿namespace NugetPackages.Infrastructure
 {
     public class ConcurrentRateLimiter: IDisposable
     {
@@ -27,8 +25,8 @@ namespace NugetPackages.Infrastructure
                     timeStamps.Remove(item.Key);
                 }
 
-                if (timeStamps.Sum(item => item.Value.Weight) >= MaxItemsPerDay ||
-                    timeStamps.Sum(t => (((DateTime.UtcNow - t.Value.UtcStarted).TotalSeconds < (60 + ToleranceDeltaSeconds) && t.Value.UtcEnded != null) || t.Value.UtcEnded == null) ? t.Value.Weight : 0) >= MaxItemsPerMinute)
+                if (timeStamps.Sum(item => item.Value.Weight) > (MaxItemsPerDay - weight) ||
+                    timeStamps.Sum(t => (((DateTime.UtcNow - t.Value.UtcStarted).TotalSeconds < (60 + ToleranceDeltaSeconds) && t.Value.UtcEnded != null) || t.Value.UtcEnded == null) ? t.Value.Weight : 0) > (MaxItemsPerMinute - weight))
                 {
                     return false;
                 }

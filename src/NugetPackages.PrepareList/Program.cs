@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.CommandLine;
+﻿using System.CommandLine;
 using NugetPackages.Infrastructure;
 using NugetPackages.Model;
 using Spectre.Console;
@@ -167,33 +166,6 @@ rootCommand.SetHandler(async (context) =>
 
             AnsiConsole.MarkupLine($"Fetched package metadata for [orange1]{packageList.Count}[/] packages");
         });
-
-    /*
-    var listoOfPackages = new HashSet<string>();
-    var listOfDependencies = new HashSet<string>();
-
-    await AnsiConsole.Status()
-        .StartAsync("Processing dependencies ...", async ctx =>
-        {
-            foreach (var item in packages)
-            {
-                _ = listoOfPackages.Add(item.Id);
-            }
-
-            foreach (var item in packages)
-            {
-                foreach (var dependency in item.Dependencies)
-                {
-                    if (!listoOfPackages.TryGetValue(dependency, out var _))
-                    {
-                        _ = listOfDependencies.Add(dependency);
-                    }
-                }
-            }
-
-            await File.WriteAllTextAsync(path: Path.Combine(Environment.CurrentDirectory, "deps.txt"), contents: System.Text.Json.JsonSerializer.Serialize(listOfDependencies));
-        });
-    */
 
     await AnsiConsole.Status()
         .StartAsync("Storing results ...", async ctx =>

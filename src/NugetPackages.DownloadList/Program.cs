@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.IO.Compression;
 using NugetPackages.Infrastructure;
 using NugetPackages.Model;

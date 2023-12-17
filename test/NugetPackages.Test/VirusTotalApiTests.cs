@@ -1,7 +1,7 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using FluentAssertions;
 using NugetPackages.Infrastructure;
+using NugetPackages.Model;
 using Xunit.Abstractions;
 
 namespace NugetPackages.Test
@@ -20,7 +20,7 @@ namespace NugetPackages.Test
         [Fact]
         public async Task UploadFile_Works()
         {
-            using var api = new VirusTotalApi(virusTotalApiKey);
+            using var api = new VirusTotalApi(virusTotalApiKey, VirusTotalApiConfig.Default);
 
             var validContents = "Valid";
             var result = await api.UploadFile(Encoding.ASCII.GetBytes(validContents), "valid_file.txt");
@@ -31,7 +31,7 @@ namespace NugetPackages.Test
         [Fact]
         public async Task GetFileReport_ForKnownFile_Works()
         {
-            using var api = new VirusTotalApi(virusTotalApiKey);
+            using var api = new VirusTotalApi(virusTotalApiKey, VirusTotalApiConfig.Default);
 
             var validContents = "Valid";
             var validContentsHash = GeneralHelper.ComputeSha256(validContents);
@@ -47,7 +47,7 @@ namespace NugetPackages.Test
         [Fact]
         public async Task GetFileReport_ForUnknownFile_Works()
         {
-            using var api = new VirusTotalApi(virusTotalApiKey);
+            using var api = new VirusTotalApi(virusTotalApiKey, VirusTotalApiConfig.Default);
 
             var validContents = "fkj49jfjdk304930437848682389283kdsjflksjdflskjflskjflskdfjlskjflsj983u298urjfsijfso8fudfus98f9sdu8f9sdufs98dfus9d8fu9suf89sduf9sduf9s8uf9su8fwjrlji4lj5h3k5hu398fusdus9dufo43j5o345uh9f7";
             var validContentsHash = GeneralHelper.ComputeSha256(validContents);
@@ -62,7 +62,7 @@ namespace NugetPackages.Test
         [Fact]
         public async Task GetFileReport_ForVirus_Works()
         {
-            using var api = new VirusTotalApi(virusTotalApiKey);
+            using var api = new VirusTotalApi(virusTotalApiKey, VirusTotalApiConfig.Default);
 
             var virusContents = "TEST_X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*";
             var virusContentsHash = GeneralHelper.ComputeSha256(virusContents.Replace("TEST_", ""));
